@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Duty Tracker Pro - Free Forever</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4361ee">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DutyTracker">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Duty Tracker Pro">
+    <meta name="description" content="Track your duty, attendance, salary and advances. Free Forever.">
+    <meta name="keywords" content="duty tracker, attendance, salary, overtime">
+    <meta name="author" content="Nitai Studio">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: #121212;
+            --card: #1e1e1e;
+            --text: #ffffff;
+            --text-sub: #a0a0a0;
+            --primary: #4361ee;
+            --primary-light: #6c8cff;
+            --secondary: #4cc9f0;
+            --accent: #f72585;
+            --success: #06d6a0;
+            --warning: #ff9f1c;
+            --danger: #ef233c;
+            --border: rgba(255, 255, 255, 0.12);
+            --input: #2a2a2a;
+            --gradient: linear-gradient(135deg, #4361ee, #4cc9f0);
+            --shadow: 0 10px 40px rgba(0,0,0,0.6);
+            --glass: rgba(30, 30, 30, 0.92);
+            --nav-height: 80px;
+            --banner-height: 56px;
+        }
+
+        [data-theme="light"] {
+            --bg: #f0f2f5;
+            --surface: #ffffff;
+            --card: #ffffff;
+            --text: #1a1a1a;
+            --text-sub: #6c757d;
+            --primary: #3a0ca3;
+            --primary-light: #5e2bff;
+            --secondary: #4895ef;
+            --accent: #f72585;
+            --success: #06d6a0;
+            --warning: #ff9f1c;
+            --danger: #ef233c;
+            --border: rgba(0, 0, 0, 0.08);
+            --input: #f1f3f5;
+            --gradient: linear-gradient(135deg, #3a0ca3, #4895ef);
+            --shadow: 0 10px 40px rgba(0,0,0,0.1);
+            --glass: rgba(255, 255, 255, 0.97);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit', sans-serif; -webkit-tap-highlight-color:transparent; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+            padding-bottom: calc(var(--nav-height) + var(--banner-height));
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes popIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes zoomIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100%); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+        /* ===== BUTTONS ===== */
+        .btn { width:100%; padding:16px; border:none; border-radius:16px; font-weight:700; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; transition:all 0.2s ease; font-size:16px; }
+        .btn-primary { background:var(--gradient); color:white; box-shadow:0 8px 25px rgba(67, 97, 238, 0.3); }
+        .btn-primary:active { transform:scale(0.97); }
+        .btn-sec { background:var(--input); color:var(--text); border:1px solid var(--border); }
+        .btn-sec:active { transform:scale(0.97); background:rgba(67, 97, 238, 0.1); }
+        .btn-sec.active { background:var(--primary); color:white; border-color:var(--primary); }
+        .btn-danger { background:rgba(239, 35, 60, 0.1); color:var(--danger); border:1px solid var(--danger); }
+        .btn-danger:active { transform:scale(0.97); background:rgba(239, 35, 60, 0.2); }
+
+        /* ===== FORM ELEMENTS ===== */
+        .inp, select, textarea { width:100%; padding:16px; background:var(--input); border:1px solid var(--border); color:var(--text); border-radius:14px; outline:none; font-size:16px; margin-bottom:15px; transition:0.3s; -webkit-appearance:none; }
+        .inp:focus, select:focus { border-color:var(--primary); background:var(--card); }
+        .label-text { font-size: 13px; color: var(--text-sub); margin-bottom: 6px; display: block; margin-left: 4px; font-weight: 500; }
+        select option { background: var(--card); color: var(--text); }
+
+        /* ===== TOAST ===== */
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 12000; left: 50%; bottom: 150px; transform: translateX(-50%); font-size: 14px; opacity: 0; transition: opacity 0.3s, bottom 0.3s; pointer-events:none; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 160px; }
+
+        /* ===== CONFIRM MODAL ===== */
+        #confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 13000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); -webkit-backdrop-filter:blur(8px); }
+        .confirm-box { background: var(--card); width: 100%; max-width: 320px; padding: 25px; border-radius: 24px; border: 1px solid var(--border); text-align: center; animation: popIn 0.3s; }
+        .confirm-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        .confirm-desc { font-size: 14px; color: var(--text-sub); margin-bottom: 25px; }
+        .confirm-actions { display: flex; gap: 10px; }
+
+        /* ===== PROFILE SETUP ===== */
+        #profile-setup { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .setup-card { background: var(--card); padding: 35px; width: 100%; max-width: 400px; border-radius: 28px; border: 1px solid var(--border); text-align: center; box-shadow: var(--shadow); animation: zoomIn 0.4s ease-out; }
+        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; border: 3px solid var(--primary); cursor: pointer; display: block; background: var(--input); }
+        .download-app-card { background: linear-gradient(135deg, #3ddc84, #0f9d58); border-radius: 16px; padding: 15px; margin: 15px 20px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .download-app-card:hover { transform: scale(1.02); }
+        .download-app-card a { color: white; text-decoration: none; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* ===== MAIN APP ===== */
+        #main-app { display:none; flex-direction:column; flex:1; }
+
+        /* ===== NAV ===== */
+        nav { padding:15px 20px; background:var(--glass); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; display:flex; justify-content:space-between; align-items:center; }
+        .logo { font-size:22px; font-weight:800; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .mini-profile { width:35px; height:35px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); cursor:pointer; background:var(--input); }
+
+        /* ===== CALENDAR ===== */
+        .cal-header { display:flex; justify-content:space-between; align-items:center; padding:20px; }
+        .cal-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; padding:0 12px; padding-bottom: 20px; }
+        .day { min-height:78px; background:var(--card); border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:0.2s; cursor:pointer; padding:6px 3px; }
+        .day:active { transform:scale(0.93); }
+        .day.today { border:2px solid var(--secondary); background:rgba(76, 201, 240, 0.1); }
+        .day-num { font-weight:700; font-size:15px; }
+        .day-tag { font-size:8px; margin-top:3px; font-weight:600; text-align:center; line-height:1.2; }
+        .ot-badge { font-size:7px; background:rgba(0,0,0,0.4); padding:2px 4px; border-radius:4px; margin-top:2px; }
+        .bg-Present { background:#06d6a0 !important; color:black; }
+        .bg-Leave { background:#ef233c !important; color:white; }
+        .bg-Sick { background:#ff9f1c !important; color:black; }
+        .bg-Holiday { background:#9d4edd !important; color:white; }
+        .bg-HalfDay { background:#ffd166 !important; color:black; }
+        .bg-Off { background:#6c757d !important; color:white; }
+
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav {
+            position: fixed;
+            bottom: var(--banner-height);
+            left: 0;
+            width: 100%;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            height: var(--nav-height);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            align-items: center;
+            z-index: 900;
+        }
+        .nav-btn { background:none; border:none; color:var(--text-sub); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; height:100%; cursor:pointer; transition:0.3s; padding:0; }
+        .nav-btn i { font-size: 19px; }
+        .nav-btn span { font-size: 10px; font-weight: 500; }
+        .nav-btn.active { color:var(--primary); }
+        .floating-home { position:relative; top:-25px; background:var(--gradient); width:55px; height:55px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(67, 97, 238, 0.5); border:4px solid var(--bg); cursor:pointer; }
+
+        /* ===== PAGES ===== */
+        .page { position:fixed; inset:0; background:var(--bg); z-index:2000; display:none; flex-direction:column; overflow-y:auto; padding-bottom:calc(var(--nav-height) + var(--banner-height) + 20px); animation:fadeIn 0.3s ease-out; }
+        .page-header { padding:20px; display:flex; align-items:center; gap:15px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10; }
+        .profile-header { text-align:center; padding:30px 20px; background:linear-gradient(180deg, rgba(67, 97, 238, 0.1), transparent); }
+        .avatar-container { position: relative; width: 110px; height: 110px; margin: 0 auto 15px; }
+        .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: var(--card); }
+        .avatar-edit { position: absolute; bottom: 5px; right: 5px; background: var(--secondary); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .settings-card { background:var(--card); border-radius:20px; margin:0 20px; border:1px solid var(--border); padding:20px; }
+        .section-title { font-size:14px; font-weight:700; color:var(--text-sub); margin:25px 20px 10px; text-transform:uppercase; letter-spacing:1px; }
+        .action-item { display:flex; align-items:center; gap:15px; padding:16px; border-bottom:1px solid var(--border); cursor:pointer; transition: 0.2s; }
+        .action-item:last-child { border-bottom:none; }
+        .action-item:active { background:rgba(67,97,238,0.07); }
+        .summary-box { background:var(--card); padding:20px; border-radius:16px; border:1px solid var(--border); margin:20px; text-align:center; }
+        .big-stat { font-size:28px; font-weight:800; margin:5px 0; }
+        .chart-container { position: relative; height:250px; width:100%; margin:20px 0; padding: 0 10px; }
+        .adv-list { margin: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .adv-item { background: var(--card); padding: 15px; border-radius: 14px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .time-card { background: var(--card); border-radius: 16px; padding: 15px; margin: 10px 20px; text-align: center; border: 1px solid var(--border); }
+        .time-buttons { display: flex; gap: 10px; margin-top: 10px; }
+        .streak-badge { background: linear-gradient(135deg, #FF6B00, #FF8C00); border-radius: 30px; padding: 5px 12px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; margin: 8px auto; }
+        .legal-content { max-width: 800px; margin: 0 auto; color: var(--text-sub); line-height: 1.6; font-size: 13px; padding: 20px; }
+        .legal-content h3 { color: var(--primary); margin-top: 20px; margin-bottom: 10px; }
+        #prof-upload { display: none; }
+
+        /* ===== ATTENDANCE MODAL ===== */
+        #att-modal {
+            position: fixed;
+            bottom: calc(var(--banner-height) + var(--nav-height));
+            left: 0;
+            width: 100%;
+            background: var(--surface);
+            border-radius: 35px 35px 0 0;
+            padding: 30px 25px;
+            z-index: 5000;
+            display: none;
+            box-shadow: 0 -10px 50px rgba(0,0,0,0.8);
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .duty-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+        .duty-btn { padding: 12px 8px; border-radius: 12px; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+
+        /* ===== SPLASH ===== */
+        #splash { position:fixed; inset:0; background:linear-gradient(135deg, #020024, #090979, #00d4ff); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; transition:opacity 0.8s; }
+        .splash-logo { font-size:80px; color:white; margin-bottom:20px; animation:zoomIn 0.8s ease-out; }
+        .loader { width:50px; height:50px; border:4px solid rgba(255,255,255,0.2); border-top-color:white; border-radius:50%; animation:spin 1s linear infinite; margin:30px 0; }
+
+        /* ===== BANNER AD CONTAINER ===== */
+        #banner-ad-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--banner-height);
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .banner-ad-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            color: var(--text-sub);
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        .banner-ad-label {
+            position: absolute;
+            top: 3px;
+            right: 8px;
+            font-size: 9px;
+            color: var(--text-sub);
+            opacity: 0.6;
+        }
+
+        /* ===== LEGAL MODAL ===== */
+        #legal-modal { position:fixed; inset:0; background:var(--bg); z-index:6000; display:none; overflow-y:auto; }
+
+        /* ===== REWARD AD MODAL ===== */
+        #reward-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 14000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .reward-box {
+            background: var(--card);
+            width: 100%;
+            max-width: 300px;
+            padding: 30px 25px;
+            border-radius: 24px;
+            border: 1px solid var(--primary);
+            text-align: center;
+            animation: popIn 0.3s;
+        }
+        .reward-icon { font-size: 50px; margin-bottom: 15px; }
+        .reward-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+        .reward-desc { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; }
+        .reward-timer { font-size: 28px; font-weight: 800; color: var(--primary); margin: 10px 0; }
+        .reward-progress { width:100%; height:6px; background:var(--input); border-radius:3px; margin:12px 0 20px; }
+        .reward-progress-bar { height:100%; background:var(--gradient); border-radius:3px; transition: width 1s linear; }
+
+        /* ===== INTERSTITIAL AD OVERLAY ===== */
+        #interstitial-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.97);
+            z-index: 15000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .intst-close { position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.1); border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+        .intst-content { text-align:center; color:white; }
+        .intst-icon { font-size:60px; margin-bottom:20px; animation:pulse 2s infinite; }
+        .intst-text { font-size:14px; opacity:0.6; margin-top:10px; }
+        .intst-timer { font-size:13px; color:var(--secondary); margin-top:15px; }
+
+        /* ===== DAY HEADER LABELS ===== */
+        .day-labels { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-weight:700; font-size:11px; margin-bottom:8px; padding:0 12px; color:var(--text-sub); }
+
+        /* ===== REPORT OUTPUT ===== */
+        #report-output .report-card { background:var(--card); padding:20px; border-radius:20px; margin-top:20px; border:1px solid var(--border); }
+        #report-output .report-row { display:flex; justify-content:space-between; margin-top:10px; font-size:14px; }
+        #report-output .report-row b { font-weight:700; }
+
+        /* ===== SMALL SCREENS ===== */
+        @media (max-width: 350px) {
+            .day { min-height: 65px; }
+            .day-num { font-size: 13px; }
+            .day-tag { font-size: 7px; }
+            .cal-grid { gap: 5px; padding: 0 8px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SPLASH SCREEN ===== -->
+    <div id="splash">
+        <i class="fas fa-shield-alt splash-logo"></i>
+        <h1 style="color:white; font-weight:300;">Duty Tracker <b style="font-weight:800;">Pro</b></h1>
+        <div class="loader"></div>
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:20px; margin-top:20px;">
+            <span style="color:#ccc;">Made in India 🇮🇳</span>
+        </div>
+        <div style="position:absolute; bottom:30px; color:#ccc; font-size:12px;">Developer By <b>Nitai Studio</b></div>
+    </div>
+
+    <!-- ===== PROFILE SETUP ===== -->
+    <div id="profile-setup">
+        <div class="setup-card">
+            <i class="fas fa-user-circle" style="font-size:60px; color:var(--primary); margin-bottom:20px;"></i>
+            <h2 style="margin-bottom:10px;">Welcome!</h2>
+            <p style="color:var(--text-sub); font-size:13px; margin-bottom:25px;">Setup your profile to get started</p>
+            <label class="avatar-upload-label">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="setup-avatar" class="avatar-preview">
+                <input type="file" id="setup-upload" accept="image/*" style="display:none">
+            </label>
+            <input type="text" id="setup-name" class="inp" placeholder="Your Full Name">
+            <button class="btn btn-primary" onclick="completeSetup()">
+                <i class="fas fa-rocket"></i> Get Started
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div id="toast">Message</div>
+
+    <!-- ===== CONFIRM MODAL ===== -->
+    <div id="confirm-modal">
+        <div class="confirm-box">
+            <div class="confirm-title" id="c-title">Are you sure?</div>
+            <div class="confirm-desc" id="c-desc">Action cannot be undone.</div>
+            <div class="confirm-actions">
+                <button class="btn btn-sec" style="width:100%" onclick="closeConfirm()">Cancel</button>
+                <button class="btn btn-primary" style="width:100%" id="c-yes-btn">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== REWARD AD MODAL ===== -->
+    <div id="reward-modal">
+        <div class="reward-box">
+            <div class="reward-icon">🎁</div>
+            <div class="reward-title">Watch to Unlock</div>
+            <div class="reward-desc" id="reward-desc">Watch a short ad to access this premium feature</div>
+            <div class="reward-timer" id="reward-timer">5</div>
+            <div class="reward-progress"><div class="reward-progress-bar" id="reward-bar" style="width:100%"></div></div>
+            <button class="btn btn-primary" id="reward-skip-btn" onclick="rewardAdComplete()" style="display:none">
+                <i class="fas fa-check"></i> Unlock Now
+            </button>
+            <button class="btn btn-sec" style="margin-top:10px;" onclick="closeRewardAd()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- ===== INTERSTITIAL AD OVERLAY ===== -->
+    <div id="interstitial-overlay">
+        <button class="intst-close" id="intst-close-btn" onclick="closeInterstitial()" style="display:none">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="intst-content">
+            <div class="intst-icon">📱</div>
+            <div style="font-size:22px; font-weight:800;">Duty Tracker Pro</div>
+            <div class="intst-text">Powered by Nitai Studio</div>
+            <div class="intst-timer" id="intst-timer-text">Please wait...</div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APP ===== -->
+    <div id="main-app">
+
+        <!-- Top Nav -->
+        <nav>
+            <div class="logo">Duty Tracker Pro</div>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-adjust" style="font-size:20px; cursor:pointer;" onclick="toggleTheme()"></i>
+                <img src="" id="mini-prof-img" class="mini-profile"
+                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'"
+                     onclick="showAdThenDo('interstitial', openProfile)">
+            </div>
+        </nav>
+
+        <!-- Calendar -->
+        <div class="cal-header">
+            <button onclick="moveMonth(-1); showBannerAd();" style="background:none; border:none; color:var(--text); font-size:24px; cursor:pointer; padding:8px;">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h2 id="month-display" style="font-weight:700;">...</h2>
+            <button onclick="moveMonth(1); showBannerAd();" style="background:none; border:none; color:var(--text); font-size:24px; cursor:pointer; padding:8px;">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="day-labels">
+            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+        </div>
+        <div id="calendar-grid" class="cal-grid"></div>
+
+        <!-- Check-in / Check-out -->
+        <div class="time-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div class="label-text">Check-in</div><div id="checkin-display" style="font-size:20px; font-weight:700;">--:--</div></div>
+                <div><div class="label-text">Check-out</div><div id="checkout-display" style="font-size:20px; font-weight:700;">--:--</div></div>
+            </div>
+            <div class="time-buttons">
+                <button class="btn btn-primary" onclick="checkin()"><i class="fas fa-sign-in-alt"></i> Check In</button>
+                <button class="btn btn-sec" onclick="checkout()"><i class="fas fa-sign-out-alt"></i> Check Out</button>
+            </div>
+        </div>
+
+        <!-- Streak -->
+        <div style="text-align:center;">
+            <div id="streak-badge" class="streak-badge" style="display:none;">
+                <i class="fas fa-fire"></i> <span id="streak-count">0</span> Day Streak!
+            </div>
+        </div>
+
+        <!-- Today Status + Add Duty -->
+        <div style="padding:0 20px 15px 20px; text-align: center;">
+            <p id="today-status" style="color:var(--text-sub); font-size:14px; margin-bottom:10px;">No Entry Today</p>
+            <button class="btn btn-primary" onclick="showAdThenDo('interstitial', () => openAttendanceModal(getToday()))">
+                <i class="fas fa-plus"></i> Add Today's Duty
+            </button>
+        </div>
+
+        <!-- Download App Card -->
+        <div class="download-app-card" onclick="downloadApp()">
+            <div style="color:white; text-align:center;">
+                <i class="fab fa-android" style="font-size:24px;"></i>
+                <div><strong>Download Premium App</strong></div>
+                <div style="font-size:12px;">Get Native APK – Free</div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <button class="nav-btn" onclick="showAdThenDo('interstitial', openReport)">
+                <i class="fas fa-chart-pie"></i><span>Report</span>
+            </button>
+            <button class="nav-btn" onclick="showAdThenDo('interstitial', openGraph)">
+                <i class="fas fa-chart-line"></i><span>Graph</span>
+            </button>
+            <div style="position:relative; display:flex; justify-content:center;">
+                <button class="floating-home" onclick="closeAllPages()">
+                    <i class="fas fa-home" style="color:white; font-size:22px;"></i>
+                </button>
+            </div>
+            <button class="nav-btn" onclick="showAdThenDo('interstitial', openAdvance)">
+                <i class="fas fa-hand-holding-usd"></i><span>Advance</span>
+            </button>
+            <button class="nav-btn" onclick="showAdThenDo('interstitial', openSettings)">
+                <i class="fas fa-cog"></i><span>Utility</span>
+            </button>
+        </div>
+
+    </div><!-- /main-app -->
+
+    <!-- ===== PAGE: PROFILE ===== -->
+    <div id="page-profile" class="page">
+        <div class="page-header">
+            <i class="fas fa-arrow-left" style="font-size:24px; cursor:pointer;" onclick="closeAllPages()"></i>
+            <h2>My Profile</h2>
+        </div>
+        <div class="profile-header">
+            <div class="avatar-container">
+                <img src="" id="prof-img" class="avatar-img"
+                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+                <input type="file" id="prof-upload" accept="image/*" onchange="uploadProfileImage(this)">
+                <label for="prof-upload" class="avatar-edit"><i class="fas fa-camera"></i></label>
+            </div>
+            <h2 id="prof-name">User Name</h2>
+            <button class="btn btn-sec" style="margin-top:10px; width:auto; padding:8px 20px;" onclick="editName()">
+                <i class="fas fa-edit"></i> Edit Name
+            </button>
+        </div>
+
+        <div class="section-title">App Info</div>
+        <div class="settings-card" style="padding:0;">
+            <div class="action-item" onclick="showAdThenDo('interstitial', () => showLegal('privacy'))">
+                <i class="fas fa-shield-alt" style="color:var(--primary);"></i><span style="flex:1;">Privacy Policy</span><i class="fas fa-chevron-right" style="color:var(--text-sub);"></i>
+            </div>
+            <div class="action-item" onclick="showAdThenDo('interstitial', () => showLegal('terms'))">
+                <i class="fas fa-file-contract" style="color:var(--secondary);"></i><span style="flex:1;">Terms & Conditions</span><i class="fas fa-chevron-right" style="color:var(--text-sub);"></i>
+            </div>
+            <div class="action-item" onclick="showAdThenDo('interstitial', () => showLegal('disclaimer'))">
+                <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i><span style="flex:1;">Disclaimer</span><i class="fas fa-chevron-right" style="color:var(--text-sub);"></i>
+            </div>
+            <div class="action-item" onclick="showAdThenDo('interstitial', () => showLegal('deletion'))">
+                <i class="fas fa-trash-alt" style="color:var(--danger);"></i><span style="flex:1;">Data Deletion</span><i class="fas fa-chevron-right" style="color:var(--text-sub);"></i>
+            </div>
+            <div class="action-item" onclick="showAdThenDo('interstitial', () => showLegal('help'))">
+                <i class="fas fa-question-circle" style="color:var(--success);"></i><span style="flex:1;">Help / FAQ</span><i class="fas fa-chevron-right" style="color:var(--text-sub);"></i>
+            </div>
+            <div class="action-item" onclick="confirmClearData()">
+                <i class="fas fa-database" style="color:var(--danger);"></i><span style="flex:1;">Clear All Data</span><i class="fas fa-trash" style="color:var(--danger);"></i>
+            </div>
+        </div>
+        <div class="download-app-card" style="margin:20px;" onclick="downloadApp()">
+            <div style="color:white; text-align:center;"><i class="fab fa-android"></i> Download Premium APK – Free</div>
+        </div>
+    </div>
+
+    <!-- ===== PAGE: SETTINGS ===== -->
+    <div id="page-settings" class="page">
+        <div class="page-header">
+            <i class="fas fa-arrow-left" style="font-size:24px; cursor:pointer;" onclick="closeAllPages()"></i>
+            <h2>Utility & Rates</h2>
+        </div>
+        <div style="padding:20px;">
+            <div class="settings-card">
+                <span class="label-text">Currency</span>
+                <select id="set-cur" class="inp">
+                    <option value="₹">₹ INR</option>
+                    <option value="$">$ USD</option>
+                    <option value="৳">৳ BDT</option>
+                    <option value="€">€ EUR</option>
+                    <option value="£">£ GBP</option>
+                    <option value="AED">AED</option>
+                </select>
+                <span class="label-text">Daily Salary</span>
+                <input type="number" id="set-sal" class="inp" placeholder="e.g., 500" inputmode="numeric">
+                <span class="label-text">Daily Food Allowance</span>
+                <input type="number" id="set-food" class="inp" placeholder="e.g., 50" inputmode="numeric">
+                <span class="label-text">Overtime Rate (Per Hour)</span>
+                <input type="number" id="set-otr" class="inp" placeholder="e.g., 100" inputmode="numeric">
+                <span class="label-text">PF Deduction (Fixed)</span>
+                <input type="number" id="set-pf" class="inp" placeholder="e.g., 1500" inputmode="numeric">
+                <span class="label-text">Monthly Target (Salary Goal)</span>
+                <input type="number" id="set-target" class="inp" placeholder="e.g., 15000" inputmode="numeric">
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    <i class="fas fa-save"></i> Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PAGE: ADVANCE ===== -->
+    <div id="page-advance" class="page">
+        <div class="page-header">
+            <i class="fas fa-arrow-left" style="font-size:24px; cursor:pointer;" onclick="closeAllPages()"></i>
+            <h2>Advance Money</h2>
+        </div>
+        <div style="padding:20px;">
+            <div class="settings-card">
+                <h3 style="margin-bottom:15px;">Add New Advance</h3>
+                <input type="number" id="adv-amt" class="inp" placeholder="Enter Amount" inputmode="numeric">
+                <input type="date" id="adv-date" class="inp">
+                <input type="text" id="adv-by" class="inp" placeholder="Contractor/Company Name">
+                <button class="btn btn-primary" onclick="addAdvance()">
+                    <i class="fas fa-plus"></i> Save Advance
+                </button>
+            </div>
+            <div style="margin:20px 0; display:flex; justify-content:space-between; align-items:center;">
+                <h3>History</h3>
+                <span id="total-adv" style="color:var(--danger); font-weight:700;">Total: 0</span>
+            </div>
+            <div id="adv-list" class="adv-list"></div>
+        </div>
+    </div>
+
+    <!-- ===== PAGE: REPORTS ===== -->
+    <div id="page-reports" class="page">
+        <div class="page-header">
+            <i class="fas fa-arrow-left" style="font-size:24px; cursor:pointer;" onclick="closeAllPages()"></i>
+            <h2>Reports</h2>
+        </div>
+        <div style="padding:20px;">
+            <div class="settings-card">
+                <div><span class="label-text">Start Date</span><input type="date" id="r-start" class="inp"></div>
+                <div><span class="label-text">End Date</span><input type="date" id="r-end" class="inp"></div>
+                <button class="btn btn-primary" onclick="showAdThenDo('interstitial', generateReport)">
+                    <i class="fas fa-chart-bar"></i> Generate Report
+                </button>
+                <button class="btn btn-sec" style="margin-top:10px;" onclick="showAdThenDo('interstitial', shareReport)">
+                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                </button>
+            </div>
+            <div id="report-output"></div>
+        </div>
+    </div>
+
+    <!-- ===== PAGE: GRAPH ===== -->
+    <div id="page-graph" class="page">
+        <div class="page-header">
+            <i class="fas fa-arrow-left" style="font-size:24px; cursor:pointer;" onclick="closeAllPages()"></i>
+            <h2>Progress Graph</h2>
+        </div>
+        <div class="summary-box">
+            <div style="color:var(--text-sub);">Today's Effort</div>
+            <div id="today-hours" class="big-stat">0 Hours</div>
+        </div>
+        <div class="chart-container">
+            <canvas id="dutyChart"></canvas>
+        </div>
+        <div class="settings-card" style="margin-bottom:20px;">
+            <h3 style="margin-bottom:15px;">Monthly Goal</h3>
+            <div id="goal-progress"></div>
+        </div>
+    </div>
+
+    <!-- ===== ATTENDANCE MODAL ===== -->
+    <div id="att-modal">
+        <h3 id="modal-date" style="text-align:center; margin-bottom:18px; font-weight:800; font-size:20px;">...</h3>
+        <div class="duty-buttons">
+            <button class="btn btn-sec duty-btn" onclick="setDutyType('Present', this)">✅ Present</button>
+            <button class="btn btn-sec duty-btn" onclick="setDutyType('Half Day', this)">🌓 Half Day</button>
+            <button class="btn btn-sec duty-btn" onclick="setDutyType('Leave', this)">🔴 Leave</button>
+            <button class="btn btn-sec duty-btn" onclick="setDutyType('Sick', this)">🤒 Sick</button>
+            <button class="btn btn-sec duty-btn" onclick="setDutyType('Holiday', this)">🎉 Holiday</button>
+            <button class="btn btn-sec duty-btn" onclick="setDutyType('Off', this)">😴 Off</button>
+        </div>
+        <span class="label-text">Shift</span>
+        <select id="shift-select" class="inp">
+            <option value="Morning">Morning Shift</option>
+            <option value="Evening">Evening Shift</option>
+            <option value="Night">Night Shift</option>
+        </select>
+        <div style="display:flex; gap:12px;">
+            <div style="flex:1;"><span class="label-text">OT (Hours)</span><input type="number" id="ot-hours" class="inp" placeholder="0" value="0" inputmode="decimal"></div>
+            <div style="flex:1;"><span class="label-text">Late (Mins)</span><input type="number" id="late-mins" class="inp" placeholder="0" value="0" inputmode="numeric"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveAttendance()">
+            <i class="fas fa-save"></i> SAVE ENTRY
+        </button>
+        <div style="display:flex; gap:10px; margin-top:12px;">
+            <button class="btn btn-danger" onclick="confirmDeleteAttendance()">
+                <i class="fas fa-trash"></i> DELETE
+            </button>
+            <button class="btn btn-sec" onclick="closeAttendanceModal()">
+                <i class="fas fa-times"></i> CANCEL
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== LEGAL MODAL ===== -->
+    <div id="legal-modal">
+        <div style="padding:20px; padding-bottom: calc(var(--banner-height) + 20px);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 id="legal-title">Policy</h2>
+                <i class="fas fa-times" style="font-size:24px; cursor:pointer; padding:10px;" onclick="closeLegal()"></i>
+            </div>
+            <div id="legal-body" class="legal-content"></div>
+        </div>
+    </div>
+
+    <!-- ===== BANNER AD CONTAINER ===== -->
+    <div id="banner-ad-container">
+        <div class="banner-ad-placeholder">
+            <span>Advertisement</span>
+        </div>
+        <span class="banner-ad-label">AD</span>
+    </div>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+    // ================================================
+    //   DUTY TRACKER PRO - FULL SCRIPT
+    //   Version 2.0 | Monetized + PWA Ready
+    //   Developer: Nitai Studio
+    // ================================================
+
+    // ===== APP DATA =====
+    let appData = {
+        profile: { name: "", avatar: "" },
+        attendance: {},
+        advances: [],
+        settings: { cur: "₹", sal: 500, food: 50, otr: 100, pf: 0, target: 15000 },
+        checkin: null,
+        checkout: null
+    };
+
+    let currentDate = new Date();
+    let selectedDate = null;
+    let selectedType = null;
+    let chartInstance = null;
+    let rewardCallback = null;
+    let rewardTimer = null;
+    let interstitialQueue = null;
+
+    // ================================================
+    //   AD BRIDGE FUNCTIONS (AppCreator24 WebView)
+    // ================================================
+
+    function showBannerAd() {
+        try {
+            if (window.Android && typeof window.Android.showBannerAd === 'function') {
+                window.Android.showBannerAd();
+            }
+        } catch(e) { /* ignore in browser */ }
+    }
+
+    function showInterstitialAd() {
+        try {
+            if (window.Android && typeof window.Android.showInterstitialAd === 'function') {
+                window.Android.showInterstitialAd();
+            }
+        } catch(e) { /* ignore in browser */ }
+    }
+
+    function showRewardedAd() {
+        try {
+            if (window.Android && typeof window.Android.showRewardedAd === 'function') {
+                window.Android.showRewardedAd();
+            }
+        } catch(e) { /* ignore in browser */ }
+    }
+
+    // ===== INTERSTITIAL AD FLOW =====
+    // Shows a brief overlay, triggers Android bridge, then runs callback
+    function showAdThenDo(adType, callback) {
+        if (adType === 'interstitial') {
+            showInterstitialAd();
+            showInterstitialOverlay(callback);
+        } else if (adType === 'rewarded') {
+            showRewardAdModal(callback);
+        } else {
+            if (callback) callback();
+        }
+    }
+
+    function showInterstitialOverlay(callback) {
+        interstitialQueue = callback;
+        const overlay = document.getElementById('interstitial-overlay');
+        const closeBtn = document.getElementById('intst-close-btn');
+        const timerText = document.getElementById('intst-timer-text');
+        overlay.style.display = 'flex';
+        closeBtn.style.display = 'none';
+        let secs = 3;
+        timerText.textContent = `Ad loading... (${secs})`;
+        const interval = setInterval(() => {
+            secs--;
+            if (secs > 0) {
+                timerText.textContent = `Ad loading... (${secs})`;
+            } else {
+                clearInterval(interval);
+                timerText.textContent = 'Tap × to continue';
+                closeBtn.style.display = 'flex';
+            }
+        }, 1000);
+    }
+
+    function closeInterstitial() {
+        document.getElementById('interstitial-overlay').style.display = 'none';
+        if (interstitialQueue) {
+            const cb = interstitialQueue;
+            interstitialQueue = null;
+            cb();
+        }
+    }
+
+    // ===== REWARDED AD FLOW =====
+    function showRewardAdModal(callback, desc) {
+        rewardCallback = callback;
+        showRewardedAd();
+        const modal = document.getElementById('reward-modal');
+        const timerEl = document.getElementById('reward-timer');
+        const barEl = document.getElementById('reward-bar');
+        const skipBtn = document.getElementById('reward-skip-btn');
+        const descEl = document.getElementById('reward-desc');
+        if (desc) descEl.textContent = desc;
+        modal.style.display = 'flex';
+        skipBtn.style.display = 'none';
+        let secs = 5;
+        timerEl.textContent = secs;
+        barEl.style.width = '100%';
+        if (rewardTimer) clearInterval(rewardTimer);
+        rewardTimer = setInterval(() => {
+            secs--;
+            timerEl.textContent = secs;
+            barEl.style.width = ((secs / 5) * 100) + '%';
+            if (secs <= 0) {
+                clearInterval(rewardTimer);
+                skipBtn.style.display = 'flex';
+                timerEl.textContent = '✓';
+            }
+        }, 1000);
+    }
+
+    function rewardAdComplete() {
+        document.getElementById('reward-modal').style.display = 'none';
+        if (rewardTimer) clearInterval(rewardTimer);
+        if (rewardCallback) {
+            const cb = rewardCallback;
+            rewardCallback = null;
+            cb();
+        }
+    }
+
+    function closeRewardAd() {
+        document.getElementById('reward-modal').style.display = 'none';
+        if (rewardTimer) clearInterval(rewardTimer);
+        rewardCallback = null;
+    }
+
+    // ================================================
+    //   DATA STORAGE
+    // ================================================
+
+    function loadData() {
+        const saved = localStorage.getItem("dutyTrackerPro");
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                appData = { ...appData, ...parsed };
+            } catch(e) {}
+        }
+        if (!appData.attendance) appData.attendance = {};
+        if (!appData.advances) appData.advances = [];
+        if (!appData.settings) appData.settings = { cur: "₹", sal: 500, food: 50, otr: 100, pf: 0, target: 15000 };
+
+        const profImg = document.getElementById("prof-img");
+        const miniImg = document.getElementById("mini-prof-img");
+        const fallback = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+        document.getElementById("prof-name").innerText = appData.profile.name || "User";
+        profImg.src = appData.profile.avatar || fallback;
+        miniImg.src = appData.profile.avatar || fallback;
+
+        document.getElementById("set-cur").value = appData.settings.cur;
+        document.getElementById("set-sal").value = appData.settings.sal;
+        document.getElementById("set-food").value = appData.settings.food;
+        document.getElementById("set-otr").value = appData.settings.otr;
+        document.getElementById("set-pf").value = appData.settings.pf;
+        document.getElementById("set-target").value = appData.settings.target;
+
+        if (appData.checkin) document.getElementById("checkin-display").innerText = appData.checkin;
+        if (appData.checkout) document.getElementById("checkout-display").innerText = appData.checkout;
+
+        renderCalendar();
+        renderAdvances();
+        updateTodayStatus();
+        updateStreak();
+        if (chartInstance) chartInstance.destroy();
+        renderGraph();
+    }
+
+    function saveData() {
+        localStorage.setItem("dutyTrackerPro", JSON.stringify(appData));
+    }
+
+    // ================================================
+    //   PROFILE
+    // ================================================
+
+    document.getElementById("setup-upload")?.addEventListener("change", function(e) {
+        if (e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById("setup-avatar").src = ev.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    function completeSetup() {
+        const name = document.getElementById("setup-name").value.trim();
+        if (!name) { showToast("Please enter your name"); return; }
+        appData.profile.name = name;
+        const avatarImg = document.getElementById("setup-avatar").src;
+        if (avatarImg && !avatarImg.includes("cdn-icons-png")) {
+            appData.profile.avatar = avatarImg;
+        }
+        saveData();
+        showInterstitialAd();
+        document.getElementById("profile-setup").style.display = "none";
+        document.getElementById("main-app").style.display = "flex";
+        loadData();
+        showBannerAd();
+    }
+
+    function uploadProfileImage(input) {
+        if (input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                appData.profile.avatar = e.target.result;
+                saveData();
+                document.getElementById("prof-img").src = e.target.result;
+                document.getElementById("mini-prof-img").src = e.target.result;
+                showToast("Profile photo updated!");
+                showInterstitialAd();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function editName() {
+        const newName = prompt("Enter your name:", appData.profile.name);
+        if (newName && newName.trim()) {
+            appData.profile.name = newName.trim();
+            saveData();
+            document.getElementById("prof-name").innerText = appData.profile.name;
+            showToast("Name updated!");
+            showInterstitialAd();
+        }
+    }
+
+    // ================================================
+    //   CALENDAR
+    // ================================================
+
+    function getToday() { return new Date().toISOString().split('T')[0]; }
+
+    function renderCalendar() {
+        const y = currentDate.getFullYear(), m = currentDate.getMonth();
+        document.getElementById("month-display").innerText = new Date(y, m).toLocaleString('default', { month: 'long', year: 'numeric' });
+        const grid = document.getElementById("calendar-grid");
+        grid.innerHTML = "";
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDate = new Date(y, m + 1, 0).getDate();
+        const today = getToday();
+
+        for (let i = 0; i < firstDay; i++) grid.innerHTML += "<div></div>";
+
+        for (let i = 1; i <= lastDate; i++) {
+            const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const entry = appData.attendance[iso];
+            const cls = entry ? `bg-${entry.type.replace(' ', '')}` : "";
+            const div = document.createElement("div");
+            div.className = `day ${cls} ${iso === today ? 'today' : ''}`;
+            div.innerHTML = `<span class="day-num">${i}</span>`;
+            if (entry) {
+                div.innerHTML += `<span class="day-tag">${entry.type}</span>`;
+                if (entry.ot) div.innerHTML += `<div class="ot-badge">${entry.ot}h OT</div>`;
+            }
+            div.onclick = () => {
+                showInterstitialAd();
+                openAttendanceModal(iso);
+            };
+            grid.appendChild(div);
+        }
+    }
+
+    function moveMonth(delta) {
+        currentDate.setMonth(currentDate.getMonth() + delta);
+        renderCalendar();
+        showBannerAd();
+    }
+
+    // ================================================
+    //   ATTENDANCE MODAL
+    // ================================================
+
+    function openAttendanceModal(date) {
+        selectedDate = date;
+        document.getElementById("modal-date").innerText = new Date(date + 'T00:00:00').toDateString();
+        const entry = appData.attendance[date];
+        document.querySelectorAll("#att-modal .duty-btn").forEach(btn => btn.classList.remove("active"));
+        if (entry) {
+            document.getElementById("ot-hours").value = entry.ot || 0;
+            document.getElementById("late-mins").value = entry.late || 0;
+            document.getElementById("shift-select").value = entry.shift || "Morning";
+            selectedType = entry.type;
+            document.querySelectorAll("#att-modal .duty-btn").forEach(btn => {
+                if (btn.innerText.includes(entry.type)) btn.classList.add("active");
+            });
+        } else {
+            document.getElementById("ot-hours").value = "";
+            document.getElementById("late-mins").value = "";
+            document.getElementById("shift-select").value = "Morning";
+            selectedType = null;
+        }
+        document.getElementById("att-modal").style.display = "block";
+        showBannerAd();
+    }
+
+    function setDutyType(type, btn) {
+        selectedType = type;
+        document.querySelectorAll("#att-modal .duty-btn").forEach(b => b.classList.remove("active"));
+        if (btn) btn.classList.add("active");
+    }
+
+    function saveAttendance() {
+        if (!selectedType) { showToast("Select duty type first"); return; }
+        appData.attendance[selectedDate] = {
+            type: selectedType,
+            ot: parseFloat(document.getElementById("ot-hours").value) || 0,
+            late: parseFloat(document.getElementById("late-mins").value) || 0,
+            shift: document.getElementById("shift-select").value
+        };
+        saveData();
+        closeAttendanceModal();
+        renderCalendar();
+        updateTodayStatus();
+        updateStreak();
+        renderGraph();
+        showToast("✅ Saved!");
+        showInterstitialAd();
+    }
+
+    function confirmDeleteAttendance() {
+        showConfirm("Delete Entry?", "This will remove the attendance record for this date.", function() {
+            deleteAttendance();
+        });
+    }
+
+    function deleteAttendance() {
+        delete appData.attendance[selectedDate];
+        saveData();
+        closeAttendanceModal();
+        renderCalendar();
+        updateTodayStatus();
+        updateStreak();
+        renderGraph();
+        showToast("🗑️ Deleted!");
+        showInterstitialAd();
+    }
+
+    function closeAttendanceModal() {
+        document.getElementById("att-modal").style.display = "none";
+    }
+
+    function updateTodayStatus() {
+        const today = getToday();
+        const entry = appData.attendance[today];
+        document.getElementById("today-status").innerHTML = entry
+            ? `Marked: <b>${entry.type}</b>${entry.ot ? ` + ${entry.ot}h OT` : ''}`
+            : "No Entry Today";
+        const hours = getTodayHours();
+        const el = document.getElementById("today-hours");
+        if (el) el.innerText = hours + " Hours";
+    }
+
+    function getTodayHours() {
+        const today = getToday();
+        const entry = appData.attendance[today];
+        if (!entry) return 0;
+        let h = 0;
+        if (entry.type === "Present") h = 8;
+        else if (entry.type === "Half Day") h = 4;
+        if (entry.ot) h += entry.ot;
+        return h;
+    }
+
+    // ================================================
+    //   CHECK-IN / CHECK-OUT
+    // ================================================
+
+    function checkin() {
+        const time = new Date().toLocaleTimeString();
+        appData.checkin = time;
+        saveData();
+        document.getElementById("checkin-display").innerText = time;
+        showToast("✅ Checked In at " + time);
+        showInterstitialAd();
+    }
+
+    function checkout() {
+        const time = new Date().toLocaleTimeString();
+        appData.checkout = time;
+        saveData();
+        document.getElementById("checkout-display").innerText = time;
+        showToast("✅ Checked Out at " + time);
+        showInterstitialAd();
+    }
+
+    // ================================================
+    //   STREAK
+    // ================================================
+
+    function calculateStreak() {
+        let streak = 0;
+        const d = new Date();
+        for (let i = 0; i < 365; i++) {
+            const date = new Date(d);
+            date.setDate(d.getDate() - i);
+            const iso = date.toISOString().split('T')[0];
+            const entry = appData.attendance[iso];
+            if (entry && ["Present", "Holiday", "Sick"].includes(entry.type)) streak++;
+            else if (i === 0 && !entry) break;
+            else if (i > 0 && (!entry || !["Present", "Holiday", "Sick"].includes(entry.type))) break;
+        }
+        return streak;
+    }
+
+    function updateStreak() {
+        const streak = calculateStreak();
+        const badge = document.getElementById("streak-badge");
+        if (streak >= 3) {
+            badge.style.display = "inline-flex";
+            document.getElementById("streak-count").innerText = streak;
+        } else {
+            badge.style.display = "none";
+        }
+    }
+
+    // ================================================
+    //   ADVANCE MONEY
+    // ================================================
+
+    function addAdvance() {
+        const amt = parseFloat(document.getElementById("adv-amt").value);
+        const date = document.getElementById("adv-date").value;
+        const by = document.getElementById("adv-by").value;
+        if (!amt || !date) { showToast("Enter amount and date"); return; }
+        appData.advances.push({ amt, date, by: by || "Unknown", id: Date.now() });
+        saveData();
+        renderAdvances();
+        document.getElementById("adv-amt").value = "";
+        document.getElementById("adv-by").value = "";
+        showToast("💰 Advance added");
+        showInterstitialAd();
+    }
+
+    function deleteAdvance(id) {
+        showConfirm("Delete Advance?", "This advance record will be permanently removed.", function() {
+            appData.advances = appData.advances.filter(a => a.id !== id);
+            saveData();
+            renderAdvances();
+            showToast("🗑️ Advance deleted");
+            showInterstitialAd();
+        });
+    }
+
+    function renderAdvances() {
+        const container = document.getElementById("adv-list");
+        if (!container) return;
+        let total = 0;
+        const sorted = [...appData.advances].reverse();
+        container.innerHTML = sorted.map(a => {
+            total += a.amt;
+            return `<div class="adv-item">
+                <div>
+                    <div style="font-weight:bold;">${appData.settings.cur}${a.amt.toLocaleString()}</div>
+                    <div style="font-size:12px; color:var(--text-sub); margin-top:3px;">${a.date} • ${a.by}</div>
+                </div>
+                <button style="background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:8px;" onclick="deleteAdvance(${a.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>`;
+        }).join("");
+        document.getElementById("total-adv").innerText = `Total: ${appData.settings.cur}${total.toLocaleString()}`;
+    }
+
+    // ================================================
+    //   SETTINGS
+    // ================================================
+
+    function saveSettings() {
+        appData.settings = {
+            cur: document.getElementById("set-cur").value,
+            sal: parseFloat(document.getElementById("set-sal").value) || 0,
+            food: parseFloat(document.getElementById("set-food").value) || 0,
+            otr: parseFloat(document.getElementById("set-otr").value) || 0,
+            pf: parseFloat(document.getElementById("set-pf").value) || 0,
+            target: parseFloat(document.getElementById("set-target").value) || 0
+        };
+        saveData();
+        showToast("⚙️ Settings saved!");
+        renderGraph();
+        showInterstitialAd();
+    }
+
+    // ================================================
+    //   REPORTS
+    // ================================================
+
+    function generateReport() {
+        const start = new Date(document.getElementById("r-start").value);
+        const end = new Date(document.getElementById("r-end").value);
+        if (isNaN(start)) { showToast("Select start date"); return; }
+
+        let days = 0, salary = 0, food = 0, otPay = 0, totalOt = 0, presentCount = 0, leaveCount = 0, sickCount = 0;
+        for (let [date, entry] of Object.entries(appData.attendance)) {
+            const d = new Date(date);
+            if (d >= start && d <= end) {
+                if (entry.type === "Present") {
+                    days++; presentCount++;
+                    salary += appData.settings.sal;
+                    food += appData.settings.food;
+                } else if (entry.type === "Half Day") {
+                    days += 0.5;
+                    salary += appData.settings.sal / 2;
+                    food += appData.settings.food / 2;
+                } else if (["Holiday", "Sick"].includes(entry.type)) {
+                    days++;
+                    salary += appData.settings.sal;
+                    food += appData.settings.food;
+                    if (entry.type === "Sick") sickCount++;
+                } else if (entry.type === "Leave") {
+                    leaveCount++;
+                }
+                if (entry.ot) {
+                    totalOt += entry.ot;
+                    otPay += entry.ot * appData.settings.otr;
+                }
+            }
+        }
+
+        let advance = 0;
+        appData.advances.forEach(a => {
+            const ad = new Date(a.date);
+            if (ad >= start && ad <= end) advance += a.amt;
+        });
+
+        const pf = appData.settings.pf;
+        const net = salary + food + otPay - pf - advance;
+        const cur = appData.settings.cur;
+
+        document.getElementById("report-output").innerHTML = `
+            <div class="report-card">
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:5px;">
+                    <h3 style="font-size:16px;">Net Payable</h3>
+                    <h2 style="color:var(--success); font-size:24px;">${cur}${Math.max(0, net).toFixed(0)}</h2>
+                </div>
+                <div class="report-row"><span>Present Days</span><b>${presentCount}d</b></div>
+                <div class="report-row"><span>Leaves</span><b>${leaveCount}d</b></div>
+                <div class="report-row"><span>Sick Days</span><b>${sickCount}d</b></div>
+                <div class="report-row"><span>Total Salary (${days}d)</span><b>${cur}${salary.toFixed(0)}</b></div>
+                <div class="report-row"><span>Food Allowance</span><b>${cur}${food.toFixed(0)}</b></div>
+                <div class="report-row"><span>Overtime (${totalOt}h)</span><b>${cur}${otPay.toFixed(0)}</b></div>
+                <div class="report-row" style="color:var(--danger);"><span>PF Deduction</span><b>-${cur}${pf}</b></div>
+                <div class="report-row" style="color:var(--danger);"><span>Advance</span><b>-${cur}${advance}</b></div>
+                <button class="btn btn-primary" style="margin-top:20px;" onclick="showAdThenDo('rewarded', downloadPDF)">
+                    <i class="fas fa-file-pdf"></i> Download PDF Report
+                </button>
+            </div>`;
+        showInterstitialAd();
+    }
+
+    function downloadPDF() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(20);
+            doc.setTextColor(67, 97, 238);
+            doc.text("Duty Tracker Pro", 105, 20, null, null, "center");
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Report for ${appData.profile.name}`, 105, 35, null, null, "center");
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 105, 42, null, null, "center");
+            doc.autoTable({
+                startY: 50,
+                head: [["Date", "Type", "OT (h)", "Shift", "Late (m)"]],
+                body: Object.entries(appData.attendance)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([d, e]) => [d, e.type, e.ot || 0, e.shift || "Morning", e.late || 0]),
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [67, 97, 238] }
+            });
+            doc.save(`Duty_Report_${appData.profile.name.replace(' ', '_')}_${Date.now()}.pdf`);
+            showToast("📄 PDF Downloaded!");
+            showInterstitialAd();
+        } catch(e) {
+            showToast("PDF library loading... try again");
+        }
+    }
+
+    function shareReport() {
+        const text = `📊 *Duty Tracker Pro Report*\n👤 User: ${appData.profile.name}\n📅 Total Days: ${Object.keys(appData.attendance).length}\n🏆 Streak: ${calculateStreak()} days\n\n📱 Download App: https://github.com/NitaiStudio/DutyTrackerPro/releases/download/Dutytrackerpro/Duty.trackerpro.apk`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        showInterstitialAd();
+    }
+
+    // ================================================
+    //   GRAPH / STATISTICS
+    // ================================================
+
+    function renderGraph() {
+        const ctx = document.getElementById("dutyChart");
+        if (!ctx) return;
+        const labels = [], dataPoints = [];
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const iso = d.toISOString().split('T')[0];
+            labels.push(d.getDate());
+            const entry = appData.attendance[iso];
+            let h = 0;
+            if (entry) {
+                if (entry.type === "Present") h = 8;
+                else if (entry.type === "Half Day") h = 4;
+                if (entry.ot) h += entry.ot;
+            }
+            dataPoints.push(h);
+        }
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Hours',
+                    data: dataPoints,
+                    borderColor: '#4361ee',
+                    backgroundColor: 'rgba(67,97,238,0.12)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#4361ee'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+
+        let earned = 0;
+        const monthNow = new Date().getMonth();
+        for (let [date, entry] of Object.entries(appData.attendance)) {
+            if (new Date(date).getMonth() === monthNow && ["Present", "Holiday", "Sick"].includes(entry.type)) {
+                earned += appData.settings.sal;
+            }
+        }
+        const pct = Math.min(100, (earned / (appData.settings.target || 1)) * 100);
+        const goalEl = document.getElementById("goal-progress");
+        if (goalEl) {
+            goalEl.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+                    <span>Earned: ${appData.settings.cur}${earned.toFixed(0)}</span>
+                    <span>Target: ${appData.settings.cur}${appData.settings.target}</span>
+                </div>
+                <div style="width:100%; height:10px; background:var(--input); border-radius:5px;">
+                    <div style="width:${pct}%; height:100%; background:var(--gradient); border-radius:5px; transition:width 0.5s;"></div>
+                </div>
+                <div style="margin-top:8px; font-size:13px; color:var(--text-sub);">${pct.toFixed(1)}% of monthly target completed</div>`;
+        }
+        updateTodayStatus();
+    }
+
+    // ================================================
+    //   NAVIGATION
+    // ================================================
+
+    function closeAllPages() {
+        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+        closeAttendanceModal();
+        showBannerAd();
+    }
+
+    function openProfile() {
+        closeAllPages();
+        document.getElementById('page-profile').style.display = 'flex';
+        showBannerAd();
+    }
+
+    function openSettings() {
+        closeAllPages();
+        document.getElementById('page-settings').style.display = 'flex';
+        showBannerAd();
+    }
+
+    function openAdvance() {
+        closeAllPages();
+        document.getElementById('page-advance').style.display = 'flex';
+        renderAdvances();
+        showBannerAd();
+    }
+
+    function openReport() {
+        closeAllPages();
+        document.getElementById('page-reports').style.display = 'flex';
+        showBannerAd();
+    }
+
+    function openGraph() {
+        closeAllPages();
+        document.getElementById('page-graph').style.display = 'flex';
+        renderGraph();
+        showBannerAd();
+    }
+
+    // ================================================
+    //   UI HELPERS
+    // ================================================
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.className = 'show';
+        setTimeout(() => t.className = '', 3000);
+    }
+
+    function showConfirm(title, desc, onYes) {
+        document.getElementById('c-title').innerText = title;
+        document.getElementById('c-desc').innerText = desc;
+        const modal = document.getElementById('confirm-modal');
+        modal.style.display = 'flex';
+        const yesBtn = document.getElementById('c-yes-btn');
+        yesBtn.onclick = function() {
+            closeConfirm();
+            if (onYes) onYes();
+        };
+    }
+
+    function closeConfirm() {
+        document.getElementById('confirm-modal').style.display = 'none';
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        showInterstitialAd();
+    }
+
+    function confirmClearData() {
+        showConfirm(
+            "⚠️ Delete All Data?",
+            "This will permanently delete ALL your attendance, advances and settings.",
+            clearAllData
+        );
+    }
+
+    function clearAllData() {
+        localStorage.removeItem("dutyTrackerPro");
+        showInterstitialAd();
+        setTimeout(() => location.reload(), 500);
+    }
+
+    function downloadApp() {
+        window.open("https://github.com/NitaiStudio/DutyTrackerPro/releases/download/Dutytrackerpro/Duty.trackerpro.apk", "_blank");
+        showInterstitialAd();
+    }
+
+    // ================================================
+    //   LEGAL CONTENT
+    // ================================================
+
+    function showLegal(type) {
+        const contents = {
+            privacy: `<h3>Privacy Policy</h3><p>Duty Tracker Pro does not collect or share any personal data. All your attendance records, advances, and settings are stored locally on your device using localStorage. No data is sent to any server. You have complete control over your data.</p>`,
+            terms: `<h3>Terms & Conditions</h3><p>This app is provided "as is" for attendance tracking purposes. We are not responsible for any data loss. By using this app, you agree that you are responsible for backing up your data.</p>`,
+            disclaimer: `<h3>Disclaimer</h3><p>This app is not an official payroll system. Salary calculations are estimates based on your inputs. Please verify with your employer for actual salary.</p>`,
+            deletion: `<h3>Data Deletion</h3><p>To delete all your data, go to Profile → Clear All Data. This will permanently remove all your attendance records and settings.</p>`,
+            help: `<h3>Help & FAQ</h3>
+                <p><strong>How to add duty?</strong><br>Tap any date on the calendar or click "Add Today's Duty".</p>
+                <p style="margin-top:12px;"><strong>How to delete entry?</strong><br>Open the date entry and click the DELETE button.</p>
+                <p style="margin-top:12px;"><strong>All features are FREE!</strong><br>No subscription needed. Completely free forever.</p>
+                <p style="margin-top:12px;"><strong>Download APK:</strong><br>Click the green download card on the home screen to get the native app.</p>
+                <p style="margin-top:12px;"><strong>How to export report?</strong><br>Go to Reports, select a date range, generate, then tap Download PDF. Watch a short ad to unlock the PDF.</p>`
+        };
+        document.getElementById("legal-title").innerText = type.toUpperCase().replace('_', ' ');
+        document.getElementById("legal-body").innerHTML = contents[type] || contents.privacy;
+        document.getElementById("legal-modal").style.display = "block";
+        showBannerAd();
+    }
+
+    function closeLegal() {
+        document.getElementById("legal-modal").style.display = "none";
+        showInterstitialAd();
+    }
+
+    // ================================================
+    //   PWA – SERVICE WORKER REGISTRATION
+    // ================================================
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('./sw.js').then(function(reg) {
+                console.log('SW registered:', reg.scope);
+            }).catch(function(err) {
+                console.log('SW registration failed:', err);
+            });
+        });
+    }
+
+    // ================================================
+    //   PWA INSTALL PROMPT
+    // ================================================
+
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    // ================================================
+    //   INITIALIZE APP
+    // ================================================
+
+    // Set theme
+    document.body.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+
+    // Set default dates
+    document.getElementById("adv-date").value = getToday();
+    document.getElementById("r-end").value = getToday();
+    const startOfMonth = new Date(); startOfMonth.setDate(1);
+    document.getElementById("r-start").value = startOfMonth.toISOString().split('T')[0];
+
+    // Check if profile exists
+    const saved = localStorage.getItem("dutyTrackerPro");
+    if (saved && JSON.parse(saved).profile?.name) {
+        document.getElementById("profile-setup").style.display = "none";
+        document.getElementById("main-app").style.display = "flex";
+        loadData();
+    } else {
+        document.getElementById("profile-setup").style.display = "flex";
+        document.getElementById("main-app").style.display = "none";
+    }
+
+    // Splash fade-out
+    setTimeout(() => {
+        document.getElementById("splash").style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById("splash").style.display = "none";
+            showBannerAd(); // Show banner after splash
+        }, 800);
+    }, 2000);
+
+    // Show banner ad on load
+    window.addEventListener('load', () => {
+        setTimeout(showBannerAd, 2500);
+    });
+
+    // ================================================
+    //   EXPOSE ALL FUNCTIONS GLOBALLY (WebView compat)
+    // ================================================
+
+    window.completeSetup = completeSetup;
+    window.uploadProfileImage = uploadProfileImage;
+    window.editName = editName;
+    window.toggleTheme = toggleTheme;
+    window.openProfile = openProfile;
+    window.openSettings = openSettings;
+    window.openAdvance = openAdvance;
+    window.openReport = openReport;
+    window.openGraph = openGraph;
+    window.closeAllPages = closeAllPages;
+    window.moveMonth = moveMonth;
+    window.openAttendanceModal = openAttendanceModal;
+    window.setDutyType = setDutyType;
+    window.saveAttendance = saveAttendance;
+    window.deleteAttendance = deleteAttendance;
+    window.confirmDeleteAttendance = confirmDeleteAttendance;
+    window.closeAttendanceModal = closeAttendanceModal;
+    window.checkin = checkin;
+    window.checkout = checkout;
+    window.addAdvance = addAdvance;
+    window.deleteAdvance = deleteAdvance;
+    window.saveSettings = saveSettings;
+    window.generateReport = generateReport;
+    window.downloadPDF = downloadPDF;
+    window.shareReport = shareReport;
+    window.clearAllData = clearAllData;
+    window.confirmClearData = confirmClearData;
+    window.downloadApp = downloadApp;
+    window.showLegal = showLegal;
+    window.closeLegal = closeLegal;
+    window.closeConfirm = closeConfirm;
+    window.getToday = getToday;
+    window.showBannerAd = showBannerAd;
+    window.showInterstitialAd = showInterstitialAd;
+    window.showRewardedAd = showRewardedAd;
+    window.showAdThenDo = showAdThenDo;
+    window.closeInterstitial = closeInterstitial;
+    window.rewardAdComplete = rewardAdComplete;
+    window.closeRewardAd = closeRewardAd;
+
+    </script>
+</body>
+</html>
