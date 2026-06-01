@@ -1,7 +1,7 @@
 // ===== Duty Tracker Pro - Service Worker =====
 // Version: 2.0.0
 
-const CACHE_NAME = 'duty-tracker-pro-v2';
+const CACHE_NAME = 'duty-tracker-pro-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
