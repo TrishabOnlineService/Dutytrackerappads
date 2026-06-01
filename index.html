@@ -335,9 +335,18 @@
     }
 
     // AppCreator24 navigation
-    function goToSection(ref) {
-        // AppCreator24 uses go:REFERENCE format
-        window.location.href = "go:" + ref;
+        function goToSection(ref) {
+        var a = document.getElementById("nav-" + ref);
+        if (a) { a.click(); }
+        else {
+            var t = document.createElement("a");
+            t.href = "go:" + ref;
+            t.style.display = "none";
+            document.body.appendChild(t);
+            t.click();
+            document.body.removeChild(t);
+        }
+    }else{var _t=document.createElement("a");_t.href="go:"+ref;_t.style.display="none";document.body.appendChild(_t);_t.click();document.body.removeChild(_t);}
     }
 
     setTimeout(() => {
@@ -404,5 +413,16 @@
         }
     });
 </script>
+
+<!-- AppCreator24 Navigation Anchors -->
+<a id="nav-S1" href="go:S1" style="display:none"></a>
+<a id="nav-S2" href="go:S2" style="display:none"></a>
+<a id="nav-S3" href="go:S3" style="display:none"></a>
+<a id="nav-S4" href="go:S4" style="display:none"></a>
+<a id="nav-S5" href="go:S5" style="display:none"></a>
+<a id="nav-S6" href="go:S6" style="display:none"></a>
+<a id="nav-S7" href="go:S7" style="display:none"></a>
+<a id="nav-S8" href="go:S8" style="display:none"></a>
+
 </body>
 </html>
