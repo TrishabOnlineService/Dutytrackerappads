@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#060608;--card:#141418;--card2:#1c1c22;--text:#fff;--sub:#888;--primary:#4361ee;--pl:#6c8cff;--sec:#4cc9f0;--grad:linear-gradient(135deg,#4361ee,#4cc9f0);--danger:#ef233c;--success:#06d6a0;--warn:#ff9f1c;--border:rgba(255,255,255,0.08);--inp:#1e1e26;--nh:0px;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Outfit',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:30px;}
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+
+/* TOPBAR */
+.topbar{padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;}
+.back{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;}
+.pg-title{font-size:20px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.content{padding:14px;animation:up 0.3s;}
+
+/* CARD */
+.card{background:var(--card);border-radius:20px;padding:18px;border:1px solid var(--border);margin-bottom:14px;}
+.card-title{font-weight:800;font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+/* CHIPS */
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{background:var(--inp);border:1px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;color:var(--sub);transition:0.2s;flex-shrink:0;}
+.chip.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(67,97,238,0.3);}
+
+/* INPUTS */
+.lbl{font-size:11px;color:var(--sub);font-weight:700;margin-bottom:5px;display:block;margin-top:12px;text-transform:uppercase;letter-spacing:0.4px;}
+.lbl:first-of-type{margin-top:0;}
+.inp-wrap{position:relative;}
+.inp-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:13px;pointer-events:none;}
+input[type=date]{width:100%;padding:13px 13px 13px 36px;background:var(--inp);border:1.5px solid var(--border);color:#fff;border-radius:13px;outline:none;font-size:14px;font-family:'Outfit',sans-serif;transition:0.2s;}
+input[type=date]:focus{border-color:var(--primary);}
+
+/* BUTTONS */
+.btn{width:100%;padding:15px;border:none;border-radius:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-size:14px;font-family:'Outfit',sans-serif;margin-top:12px;transition:0.2s;}
+.btn:active{transform:scale(0.97);}
+.btn-g{background:var(--grad);color:#fff;box-shadow:0 6px 20px rgba(67,97,238,0.3);}
+.btn-pdf{background:rgba(239,35,60,0.12);color:#ff6b6b;border:1px solid rgba(239,35,60,0.3);}
+.btn-wa{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;}
+.btn-fb{background:linear-gradient(135deg,#1877f2,#0c5cbf);color:#fff;}
+.btn-dl{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);}
+
+/* RESULT CARD */
+.res-card{background:var(--card);border-radius:22px;border:1px solid var(--border);overflow:hidden;margin-top:14px;animation:up 0.35s;}
+
+.res-head{background:linear-gradient(135deg,#1a1f6e,#0f3460);padding:22px 20px;text-align:center;position:relative;overflow:hidden;}
+.res-head::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(76,201,240,0.08);border-radius:50%;}
+.res-head::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;background:rgba(67,97,238,0.1);border-radius:50%;}
+.res-period{color:rgba(255,255,255,0.55);font-size:11px;font-weight:700;letter-spacing:0.4px;margin-bottom:4px;}
+.res-name{color:rgba(255,255,255,0.7);font-size:13px;margin-bottom:6px;}
+.res-net-lbl{color:rgba(255,255,255,0.55);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.res-net{color:#fff;font-size:42px;font-weight:800;line-height:1.1;margin-top:2px;}
+
+/* STAT PILLS */
+.stat-pills{display:flex;gap:6px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--border);}
+.pill{flex:1;min-width:80px;background:var(--card2);border-radius:12px;padding:10px 8px;text-align:center;border:1px solid var(--border);}
+.pill-val{font-size:18px;font-weight:800;}
+.pill-lbl{font-size:9px;color:var(--sub);font-weight:700;margin-top:2px;text-transform:uppercase;}
+
+/* BREAKDOWN ROWS */
+.section-lbl{padding:12px 18px 6px;font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:0.7px;}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.res-row:last-child{border-bottom:none;}
+.row-left{display:flex;align-items:center;gap:10px;}
+.row-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.res-lbl{font-size:13px;color:var(--sub);}
+.res-val{font-size:15px;font-weight:800;}
+.g{color:var(--success);} .r{color:var(--danger);} .o{color:var(--warn);} .b{color:var(--pl);} .p{color:#9d4edd;} .t{color:var(--sec);}
+
+/* SHARE SECTION */
+.share-section{padding:16px;display:flex;flex-direction:column;gap:9px;border-top:1px solid var(--border);}
+.share-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+
+/* PDF OVERLAY */
+#pdf-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9000;display:none;flex-direction:column;}
+#pdf-overlay.on{display:flex;}
+.pdf-topbar{background:var(--card);padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.pdf-title{flex:1;font-weight:800;font-size:16px;}
+.pdf-close{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;}
+#pdf-frame{flex:1;border:none;background:#fff;}
+.pdf-actions{background:var(--card);padding:14px;display:flex;gap:9px;flex-shrink:0;border-top:1px solid var(--border);}
+.pdf-actions .btn{margin-top:0;flex:1;}
+
+#toast{visibility:hidden;background:#1a1a22;color:#fff;border:1px solid var(--border);border-radius:50px;padding:12px 22px;position:fixed;z-index:99999;left:50%;bottom:24px;transform:translateX(-50%);font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s,bottom 0.3s;white-space:nowrap;}
+#toast.on{visibility:visible;opacity:1;bottom:40px;}
+a.na{display:none!important;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- PDF VIEWER OVERLAY -->
+<div id="pdf-overlay">
+  <div class="pdf-topbar">
+    <button class="pdf-close" onclick="closePDF()"><i class="fas fa-times"></i></button>
+    <div class="pdf-title">📄 Report Preview</div>
+  </div>
+  <iframe id="pdf-frame" src=""></iframe>
+  <div class="pdf-actions">
+    <button class="btn btn-wa" onclick="shareWA()" style="margin-top:0;"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+    <button class="btn btn-fb" onclick="shareFB()" style="margin-top:0;"><i class="fab fa-facebook"></i> Facebook</button>
+    <button class="btn btn-dl" onclick="dlPDF()" style="margin-top:0;"><i class="fas fa-download"></i> Save</button>
+  </div>
+</div>
+
+<div class="topbar">
+  <button class="back" onclick="goTo('S2')"><i class="fas fa-arrow-left"></i></button>
+  <div class="pg-title">📊 Reports</div>
+</div>
+
+<div class="content">
+  <div class="card">
+    <div class="card-title">🗓️ <span id="title-quick">Quick Month</span></div>
+    <div class="chips" id="chips"></div>
+    <span class="lbl" id="lbl-start">Start Date</span>
+    <div class="inp-wrap"><i class="fas fa-calendar"></i><input type="date" id="r-s"></div>
+    <span class="lbl" id="lbl-end">End Date</span>
+    <div class="inp-wrap"><i class="fas fa-calendar-check"></i><input type="date" id="r-e"></div>
+    <button class="btn btn-g" onclick="genReport()"><i class="fas fa-calculator"></i> <span id="btn-gen">Generate Report</span></button>
+  </div>
+  <div id="out"></div>
+</div>
+
+<a class="na" id="nav-S1" href="go:S1"></a><a class="na" id="nav-S2" href="go:S2"></a>
+<a class="na" id="nav-S3" href="go:S3"></a><a class="na" id="nav-S4" href="go:S4"></a>
+<a class="na" id="nav-S5" href="go:S5"></a><a class="na" id="nav-S6" href="go:S6"></a>
+<a class="na" id="nav-S7" href="go:S7"></a><a class="na" id="nav-S8" href="go:S8"></a>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// ── i18n ──
+var TRANSLATIONS={
+  en:{quickMonth:"Quick Month",startDate:"Start Date",endDate:"End Date",btnGen:"Generate Report",netPay:"Net Payable",present:"Present",halfDay:"Half Day",leave:"Leave",sick:"Sick",holiday:"Holiday",off:"Off",baseSal:"Base Salary",food:"Food Allow.",otPay:"OT Pay",gross:"Gross",pf:"PF Deduct",net:"Net Take-Home",days:"Days",hours:"hrs",viewPDF:"View PDF Report",shareWA:"WhatsApp",shareFB:"Facebook",download:"Download",attendance:"ATTENDANCE",earnings:"EARNINGS",period:"Period",employee:"Employee"},
+  hi:{quickMonth:"त्वरित माह",startDate:"शुरू दिनांक",endDate:"अंत दिनांक",btnGen:"रिपोर्ट बनाएं",netPay:"कुल भुगतान",present:"उपस्थित",halfDay:"आधा दिन",leave:"छुट्टी",sick:"बीमार",holiday:"अवकाश",off:"बंद",baseSal:"मूल वेतन",food:"भोजन भत्ता",otPay:"ओटी भुगतान",gross:"कुल",pf:"पीएफ कटौती",net:"नेट वेतन",days:"दिन",hours:"घंटे",viewPDF:"PDF देखें",shareWA:"व्हाट्सएप",shareFB:"फेसबुक",download:"डाउनलोड",attendance:"उपस्थिति",earnings:"कमाई",period:"अवधि",employee:"कर्मचारी"},
+  bn:{quickMonth:"দ্রুত মাস",startDate:"শুরুর তারিখ",endDate:"শেষ তারিখ",btnGen:"রিপোর্ট তৈরি করুন",netPay:"নেট পেমেন্ট",present:"উপস্থিত",halfDay:"অর্ধদিন",leave:"ছুটি",sick:"অসুস্থ",holiday:"ছুটির দিন",off:"বন্ধ",baseSal:"মূল বেতন",food:"খাদ্য ভাতা",otPay:"ওটি পেমেন্ট",gross:"মোট",pf:"পিএফ কর্তন",net:"নেট বেতন",days:"দিন",hours:"ঘণ্টা",viewPDF:"PDF দেখুন",shareWA:"হোয়াটসঅ্যাপ",shareFB:"ফেসবুক",download:"ডাউনলোড",attendance:"উপস্থিতি",earnings:"উপার্জন",period:"সময়কাল",employee:"কর্মচারী"},
+  te:{quickMonth:"త్వరిత నెల",startDate:"ప్రారంభ తేదీ",endDate:"ముగింపు తేదీ",btnGen:"నివేదిక రూపొందించు",netPay:"నికర చెల్లింపు",present:"హాజరు",halfDay:"అర్ధ రోజు",leave:"సెలవు",sick:"అనారోగ్యం",holiday:"సెలవు దినం",off:"ఆఫ్",baseSal:"ప్రాథమిక వేతనం",food:"ఆహార భత్యం",otPay:"OT చెల్లింపు",gross:"స్థూల",pf:"PF తగ్గింపు",net:"నికర వేతనం",days:"రోజులు",hours:"గంటలు",viewPDF:"PDF చూడండి",shareWA:"వాట్సాప్",shareFB:"ఫేస్‌బుక్",download:"డౌన్‌లోడ్",attendance:"హాజరు",earnings:"సంపాదన",period:"కాలం",employee:"ఉద్యోగి"},
+  ta:{quickMonth:"விரைவு மாதம்",startDate:"தொடக்க தேதி",endDate:"முடிவு தேதி",btnGen:"அறிக்கை உருவாக்கு",netPay:"நிகர செலுத்தல்",present:"வருகை",halfDay:"அரை நாள்",leave:"விடுப்பு",sick:"நோய்",holiday:"விடுமுறை",off:"ஆஃப்",baseSal:"அடிப்படை சம்பளம்",food:"உணவு கொடுப்பனவு",otPay:"OT செலுத்தல்",gross:"மொத்தம்",pf:"PF கழிவு",net:"நிகர சம்பளம்",days:"நாட்கள்",hours:"மணி",viewPDF:"PDF காண்க",shareWA:"வாட்ஸ்அப்",shareFB:"பேஸ்புக்",download:"பதிவிறக்கம்",attendance:"வருகை",earnings:"வருவாய்",period:"காலம்",employee:"ஊழியர்"},
+  mr:{quickMonth:"द्रुत महिना",startDate:"सुरुवात तारीख",endDate:"शेवटची तारीख",btnGen:"अहवाल तयार करा",netPay:"निव्वळ देय",present:"उपस्थित",halfDay:"अर्धा दिवस",leave:"रजा",sick:"आजारी",holiday:"सुट्टी",off:"बंद",baseSal:"मूळ वेतन",food:"जेवण भत्ता",otPay:"ओटी वेतन",gross:"एकूण",pf:"पीएफ वजावट",net:"निव्वळ वेतन",days:"दिवस",hours:"तास",viewPDF:"PDF पहा",shareWA:"व्हॉट्सअॅप",shareFB:"फेसबुक",download:"डाउनलोड",attendance:"उपस्थिती",earnings:"कमाई",period:"कालावधी",employee:"कर्मचारी"},
+  gu:{quickMonth:"ઝડપી મહિનો",startDate:"શરૂ તારીખ",endDate:"અંત તારીખ",btnGen:"રિપોર્ટ બનાવો",netPay:"નેટ ચૂકવણી",present:"હાજર",halfDay:"અર્ધ દિવસ",leave:"રજા",sick:"બીમાર",holiday:"રજા",off:"ઓફ",baseSal:"મૂળ પગાર",food:"ખોરાક ભથ્થું",otPay:"OT ચૂકવણી",gross:"કુલ",pf:"PF કાપ",net:"નેટ પગાર",days:"દિવસ",hours:"કલાક",viewPDF:"PDF જુઓ",shareWA:"WhatsApp",shareFB:"Facebook",download:"ડાઉનલોડ",attendance:"હાજરી",earnings:"કમાણી",period:"સમયગાળો",employee:"કર્મચારી"},
+  kn:{quickMonth:"ತ್ವರಿತ ತಿಂಗಳು",startDate:"ಪ್ರಾರಂಭ ದಿನಾಂಕ",endDate:"ಅಂತ್ಯ ದಿನಾಂಕ",btnGen:"ವರದಿ ರಚಿಸಿ",netPay:"ನಿವ್ವಳ ಪಾವತಿ",present:"ಹಾಜರು",halfDay:"ಅರ್ಧ ದಿನ",leave:"ರಜೆ",sick:"ಅನಾರೋಗ್ಯ",holiday:"ರಜಾ ದಿನ",off:"ಆಫ್",baseSal:"ಮೂಲ ವೇತನ",food:"ಆಹಾರ ಭತ್ಯೆ",otPay:"OT ಪಾವತಿ",gross:"ಒಟ್ಟು",pf:"PF ಕಡಿತ",net:"ನಿವ್ವಳ ವೇತನ",days:"ದಿನಗಳು",hours:"ಗಂಟೆ",viewPDF:"PDF ನೋಡಿ",shareWA:"WhatsApp",shareFB:"Facebook",download:"ಡೌನ್‌ಲೋಡ್",attendance:"ಹಾಜರಾತಿ",earnings:"ಆದಾಯ",period:"ಅವಧಿ",employee:"ಉದ್ಯೋಗಿ"},
+  ml:{quickMonth:"ദ്രുത മാസം",startDate:"ആരംഭ തീയതി",endDate:"അവസാന തീയതി",btnGen:"റിപ്പോർട്ട് ഉണ്ടാക്കുക",netPay:"നിക്ഷേപ തുക",present:"ഹാജർ",halfDay:"അർദ്ധ ദിവസം",leave:"അവധി",sick:"രോഗം",holiday:"അവധി ദിവസം",off:"ഓഫ്",baseSal:"അടിസ്ഥാന ശമ്പളം",food:"ഭക്ഷണ അലവൻസ്",otPay:"OT ശമ്പളം",gross:"മൊത്തം",pf:"PF കുറവ്",net:"നെറ്റ് ശമ്പളം",days:"ദിവസങ്ങൾ",hours:"മണിക്കൂർ",viewPDF:"PDF കാണുക",shareWA:"WhatsApp",shareFB:"Facebook",download:"ഡൗൺലോഡ്",attendance:"ഹാജരാകൽ",earnings:"വരുമാനം",period:"കാലഘട്ടം",employee:"ജീവനക്കാരൻ"},
+  pa:{quickMonth:"ਤੇਜ਼ ਮਹੀਨਾ",startDate:"ਸ਼ੁਰੂ ਤਾਰੀਖ",endDate:"ਅੰਤ ਤਾਰੀਖ",btnGen:"ਰਿਪੋਰਟ ਬਣਾਓ",netPay:"ਨੈੱਟ ਭੁਗਤਾਨ",present:"ਹਾਜ਼ਰ",halfDay:"ਅੱਧਾ ਦਿਨ",leave:"ਛੁੱਟੀ",sick:"ਬਿਮਾਰ",holiday:"ਛੁੱਟੀ ਦਾ ਦਿਨ",off:"ਬੰਦ",baseSal:"ਮੂਲ ਤਨਖਾਹ",food:"ਭੋਜਨ ਭੱਤਾ",otPay:"OT ਭੁਗਤਾਨ",gross:"ਕੁੱਲ",pf:"PF ਕਟੌਤੀ",net:"ਨੈੱਟ ਤਨਖਾਹ",days:"ਦਿਨ",hours:"ਘੰਟੇ",viewPDF:"PDF ਦੇਖੋ",shareWA:"WhatsApp",shareFB:"Facebook",download:"ਡਾਊਨਲੋਡ",attendance:"ਹਾਜ਼ਰੀ",earnings:"ਕਮਾਈ",period:"ਸਮਾਂ",employee:"ਕਰਮਚਾਰੀ"},
+  ar:{quickMonth:"شهر سريع",startDate:"تاريخ البدء",endDate:"تاريخ الانتهاء",btnGen:"إنشاء تقرير",netPay:"صافي المستحق",present:"حاضر",halfDay:"نصف يوم",leave:"إجازة",sick:"مريض",holiday:"عطلة",off:"إجازة",baseSal:"الراتب الأساسي",food:"بدل طعام",otPay:"أجر إضافي",gross:"الإجمالي",pf:"خصم التأمين",net:"صافي الراتب",days:"أيام",hours:"ساعات",viewPDF:"عرض PDF",shareWA:"واتساب",shareFB:"فيسبوك",download:"تنزيل",attendance:"الحضور",earnings:"الأرباح",period:"الفترة",employee:"الموظف"},
+  zh:{quickMonth:"快速月份",startDate:"开始日期",endDate:"结束日期",btnGen:"生成报告",netPay:"实发工资",present:"出勤",halfDay:"半天",leave:"请假",sick:"病假",holiday:"节假日",off:"休息",baseSal:"基本工资",food:"餐补",otPay:"加班费",gross:"总计",pf:"公积金扣除",net:"净工资",days:"天",hours:"小时",viewPDF:"查看PDF",shareWA:"WhatsApp",shareFB:"Facebook",download:"下载",attendance:"考勤",earnings:"收入",period:"期间",employee:"员工"},
+  es:{quickMonth:"Mes Rápido",startDate:"Fecha Inicio",endDate:"Fecha Fin",btnGen:"Generar Informe",netPay:"Neto a Pagar",present:"Presente",halfDay:"Medio Día",leave:"Permiso",sick:"Enfermo",holiday:"Festivo",off:"Descanso",baseSal:"Salario Base",food:"Dieta",otPay:"Horas Extra",gross:"Bruto",pf:"Deduc. SS",net:"Neto",days:"días",hours:"hrs",viewPDF:"Ver PDF",shareWA:"WhatsApp",shareFB:"Facebook",download:"Descargar",attendance:"ASISTENCIA",earnings:"INGRESOS",period:"Período",employee:"Empleado"},
+  fr:{quickMonth:"Mois Rapide",startDate:"Date Début",endDate:"Date Fin",btnGen:"Générer Rapport",netPay:"Net à Payer",present:"Présent",halfDay:"Demi-journée",leave:"Congé",sick:"Malade",holiday:"Férié",off:"Repos",baseSal:"Salaire Base",food:"Repas",otPay:"Heures Sup.",gross:"Brut",pf:"Cotisations",net:"Net",days:"jours",hours:"h",viewPDF:"Voir PDF",shareWA:"WhatsApp",shareFB:"Facebook",download:"Télécharger",attendance:"PRÉSENCES",earnings:"REVENUS",period:"Période",employee:"Employé"},
+};
+function t(k){ return (TRANSLATIONS[curLang]||TRANSLATIONS.en)[k]||(TRANSLATIONS.en[k]||k); }
+
+// ── FIREBASE ──
+var FB_CFG={apiKey:"AIzaSyCE0l5l-hH330jvC989Dr99r7M5v3wMgPo",authDomain:"duty-tracker-pro-329c4.firebaseapp.com",databaseURL:"https://duty-tracker-pro-329c4-default-rtdb.firebaseio.com",projectId:"duty-tracker-pro-329c4",storageBucket:"duty-tracker-pro-329c4.firebasestorage.app",messagingSenderId:"51179753980",appId:"1:51179753980:web:78cfda910b7fa6954fa279"};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB=firebase.database(), UID=localStorage.getItem("dtp_uid");
+if(!UID) goTo("S1");
+
+var ATT={}, S={cur:"₹",sal:500,food:50,otr:100,pf:0,target:15000}, UNAME="User";
+var curLang=localStorage.getItem("dtp_lang")||"en";
+
+DB.ref("users/"+UID).once("value",function(snap){
+  if(!snap.exists()){ goTo("S1"); return; }
+  var d=snap.val();
+  if(d.attendance) ATT=d.attendance;
+  if(d.settings) S=Object.assign(S,d.settings);
+  UNAME=d.name||"User";
+  if(d.lang){ curLang=d.lang; localStorage.setItem("dtp_lang",d.lang); }
+  applyLang();
+  initDates();
+  buildChips();
+});
+
+function applyLang(){
+  document.getElementById("title-quick").textContent=t("quickMonth");
+  document.getElementById("lbl-start").textContent=t("startDate");
+  document.getElementById("lbl-end").textContent=t("endDate");
+  document.getElementById("btn-gen").textContent=t("btnGen");
+  document.body.style.direction=(["ar","ur","fa","he"].includes(curLang))?"rtl":"ltr";
+}
+
+function initDates(){
+  var now=new Date();
+  document.getElementById("r-e").value=now.toISOString().split("T")[0];
+  document.getElementById("r-s").value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split("T")[0];
+}
+
+function buildChips(){
+  var now=new Date(), h="";
+  var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  for(var i=0;i<6;i++){
+    var d2=new Date(now.getFullYear(),now.getMonth()-i,1);
+    var y=d2.getFullYear(), m=d2.getMonth();
+    h+='<div class="chip'+(i===0?" on":"")+'" onclick="selMon('+y+','+m+',this)">'+months[m]+" '"+String(y).slice(2)+'</div>';
+  }
+  document.getElementById("chips").innerHTML=h;
+}
+
+function selMon(y,m,el){
+  document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("on"); });
+  el.classList.add("on");
+  document.getElementById("r-s").value=new Date(y,m,1).toISOString().split("T")[0];
+  document.getElementById("r-e").value=new Date(y,m+1,0).toISOString().split("T")[0];
+}
+
+// ── GENERATE ──
+function genReport(){
+  var sVal=document.getElementById("r-s").value;
+  var eVal=document.getElementById("r-e").value;
+  if(!sVal||!eVal){ toast("⚠️ Select dates"); return; }
+  var start=new Date(sVal+"T00:00:00");
+  var end=new Date(eVal+"T23:59:59");
+
+  var counts={Present:0,"Half Day":0,Leave:0,Sick:0,Holiday:0,Off:0};
+  var totalOT=0, totalLate=0;
+  var salEarn=0, foodEarn=0, otPay=0;
+
+  Object.keys(ATT).sort().forEach(function(date){
+    var d=new Date(date+"T00:00:00");
+    if(d>=start&&d<=end){
+      var e=ATT[date];
+      var type=e.type;
+      if(counts[type]!==undefined) counts[type]++;
+      if(type==="Present"){ salEarn+=S.sal; foodEarn+=(S.food||0); }
+      else if(type==="Half Day"){ salEarn+=S.sal/2; foodEarn+=(S.food||0)/2; }
+      else if(type==="Holiday"||type==="Sick"){ salEarn+=S.sal; }
+      if(e.ot&&parseFloat(e.ot)>0){ var ot=parseFloat(e.ot); totalOT+=ot; otPay+=ot*(S.otr||100); }
+      if(e.late&&parseFloat(e.late)>0) totalLate+=parseFloat(e.late);
+    }
+  });
+
+  var gross=salEarn+foodEarn+otPay;
+  var pfAmt=parseFloat(S.pf)||0;
+  var net=Math.max(0, gross-pfAmt);
+  var totalWorked=counts.Present+(counts["Half Day"]*0.5)+counts.Holiday+counts.Sick;
+
+  window._r={net,salEarn,foodEarn,otPay,pfAmt,gross,totalOT,totalLate,counts,totalWorked,
+    cur:S.cur||"₹",start:sVal,end:eVal,name:UNAME};
+
+  renderResult(window._r);
+}
+
+function renderResult(r){
+  var c=r.cur;
+  var fmt=function(n){ return c+Math.round(n).toLocaleString(); };
+
+  var html='<div class="res-card" style="animation:pop 0.3s ease;">';
+
+  html+='<div class="res-head">';
+  html+='<div class="res-period">'+t("period")+': '+r.start+' → '+r.end+'</div>';
+  html+='<div class="res-name">👤 '+r.name+'</div>';
+  html+='<div class="res-net-lbl">'+t("netPay")+'</div>';
+  html+='<div class="res-net">'+fmt(r.net)+'</div>';
+  html+='</div>';
+
+  html+='<div class="stat-pills">';
+  var pillDefs=[
+    {icon:"✅",val:r.counts.Present,lbl:t("present"),col:"#06d6a0"},
+    {icon:"🌗",val:r.counts["Half Day"],lbl:t("halfDay"),col:"#6c8cff"},
+    {icon:"🏠",val:r.counts.Leave,lbl:t("leave"),col:"#ef233c"},
+    {icon:"🤒",val:r.counts.Sick,lbl:t("sick"),col:"#ff9f1c"},
+    {icon:"🎉",val:r.counts.Holiday,lbl:t("holiday"),col:"#9d4edd"},
+    {icon:"😴",val:r.counts.Off,lbl:t("off"),col:"#666"},
+  ];
+  pillDefs.forEach(function(p){
+    html+='<div class="pill"><div class="pill-val" style="color:'+p.col+'">'+p.icon+' '+p.val+'</div><div class="pill-lbl">'+p.lbl+'</div></div>';
+  });
+  html+='</div>';
+
+  html+='<div class="stat-pills" style="border-top:1px solid var(--border);padding-top:10px;">';
+  html+='<div class="pill"><div class="pill-val" style="color:#4cc9f0">⏰ '+r.totalOT+'h</div><div class="pill-lbl">OT '+t("hours")+'</div></div>';
+  html+='<div class="pill"><div class="pill-val" style="color:#ff9f1c">⏱️ '+Math.round(r.totalLate)+'m</div><div class="pill-lbl">Late Mins</div></div>';
+  html+='<div class="pill"><div class="pill-val" style="color:#06d6a0">📅 '+r.totalWorked+'</div><div class="pill-lbl">'+t("days")+' Worked</div></div>';
+  html+='</div>';
+
+  html+='<div class="section-lbl">'+t("earnings")+'</div>';
+  var rows=[
+    {icon:"💰",bg:"rgba(6,214,160,0.1)",lbl:t("baseSal"),val:fmt(r.salEarn),cls:"g"},
+    {icon:"🍱",bg:"rgba(76,201,240,0.1)",lbl:t("food"),val:fmt(r.foodEarn),cls:"t"},
+    {icon:"⏰",bg:"rgba(255,159,28,0.1)",lbl:t("otPay")+" ("+r.totalOT+"h)",val:fmt(r.otPay),cls:"o"},
+    {icon:"💼",bg:"rgba(108,140,255,0.1)",lbl:t("gross"),val:fmt(r.gross),cls:"b"},
+    {icon:"📉",bg:"rgba(239,35,60,0.1)",lbl:t("pf"),val:"-"+fmt(r.pfAmt),cls:"r"},
+    {icon:"🏆",bg:"rgba(6,214,160,0.15)",lbl:t("net"),val:fmt(r.net),cls:"g"},
+  ];
+  rows.forEach(function(row){
+    html+='<div class="res-row"><div class="row-left"><div class="row-icon" style="background:'+row.bg+'">'+row.icon+'</div><div class="res-lbl">'+row.lbl+'</div></div><div class="res-val '+row.cls+'">'+row.val+'</div></div>';
+  });
+
+  html+='<div class="share-section">';
+  html+='<button class="btn btn-pdf" onclick="viewPDF()" style="margin-top:0;"><i class="fas fa-file-pdf"></i> '+t("viewPDF")+'</button>';
+  html+='<div class="share-row">';
+  html+='<button class="btn btn-wa" onclick="shareWA()" style="margin-top:0;"><i class="fab fa-whatsapp"></i> '+t("shareWA")+'</button>';
+  html+='<button class="btn btn-fb" onclick="shareFB()" style="margin-top:0;"><i class="fab fa-facebook"></i> '+t("shareFB")+'</button>';
+  html+='</div>';
+  html+='<button class="btn btn-dl" onclick="dlPDF()" style="margin-top:0;"><i class="fas fa-download"></i> '+t("download")+' PDF</button>';
+  html+='</div>';
+
+  html+='</div>';
+  document.getElementById("out").innerHTML=html;
+  document.getElementById("out").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+// ── PDF BUILD (Canvas → Image → jsPDF) ──
+// This approach renders all text via browser canvas so ANY language/font works correctly.
+
+function buildPDFAsync(callback){
+  var r=window._r; if(!r){ callback(null); return; }
+
+  var c=r.cur;
+  var fmt=function(n){ return c+Math.round(n).toLocaleString(); };
+
+  // Detect system font that supports the current language
+  var fontStack="'Noto Sans','Segoe UI','Arial Unicode MS','sans-serif'";
+
+  // Canvas dimensions: A4 at 2x scale (794x1123 px * 2 = 1588x2246)
+  var SCALE=2;
+  var W=794*SCALE, H=1123*SCALE;
+  var canvas=document.createElement("canvas");
+  canvas.width=W; canvas.height=H;
+  var ctx=canvas.getContext("2d");
+
+  // ── BACKGROUND ──
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(0,0,W,H);
+
+  var y=0; // current draw Y
+
+  // ── HEADER BAND ──
+  ctx.fillStyle="#4361ee";
+  ctx.fillRect(0,0,W,80*SCALE);
+
+  ctx.fillStyle="#ffffff";
+  ctx.font="bold "+(20*SCALE)+"px "+fontStack;
+  ctx.textAlign="center";
+  ctx.fillText("Duty Tracker Pro",W/2,28*SCALE);
+
+  ctx.font=(11*SCALE)+"px "+fontStack;
+  ctx.fillText(t("employee")+": "+r.name, W/2, 45*SCALE);
+  ctx.fillText(t("period")+": "+r.start+" → "+r.end, W/2, 60*SCALE);
+  ctx.fillText("Duty Tracker Pro | Nitai Studio 🇮🇳", W/2, 74*SCALE);
+
+  y=80*SCALE;
+
+  // ── NET PAY BOX ──
+  ctx.fillStyle="#101b50";
+  roundRect(ctx, 20*SCALE, (y+8*SCALE), (W-40*SCALE), 52*SCALE, 8*SCALE);
+  ctx.fill();
+
+  ctx.fillStyle="#96b4ff";
+  ctx.font=(10*SCALE)+"px "+fontStack;
+  ctx.textAlign="center";
+  ctx.fillText(t("netPay"), W/2, (y+22*SCALE));
+
+  ctx.fillStyle="#ffffff";
+  ctx.font="bold "+(22*SCALE)+"px "+fontStack;
+  ctx.fillText(fmt(r.net), W/2, (y+48*SCALE));
+
+  y+=68*SCALE;
+
+  // ── SECTION: ATTENDANCE ──
+  y=sectionHeader(ctx,t("attendance"),y,W,SCALE,fontStack);
+
+  var attCols=[t("present"),t("halfDay"),t("leave"),t("sick"),t("holiday"),t("off"),"OT","Late"];
+  var attVals=[r.counts.Present,r.counts["Half Day"],r.counts.Leave,r.counts.Sick,r.counts.Holiday,r.counts.Off,r.totalOT+"h",Math.round(r.totalLate)+"m"];
+  y=drawTable(ctx,attCols,attVals,"#4361ee",y,W,SCALE,fontStack);
+
+  y+=6*SCALE;
+
+  // ── SECTION: EARNINGS ──
+  y=sectionHeader(ctx,t("earnings"),y,W,SCALE,fontStack);
+
+  var earnCols=[t("baseSal"),t("food"),t("otPay"),t("gross"),t("pf"),t("net")];
+  var earnVals=[fmt(r.salEarn),fmt(r.foodEarn),fmt(r.otPay),fmt(r.gross),"-"+fmt(r.pfAmt),fmt(r.net)];
+  y=drawTable(ctx,earnCols,earnVals,"#10b981",y,W,SCALE,fontStack);
+
+  y+=10*SCALE;
+
+  // ── FOOTER LINE ──
+  ctx.strokeStyle="#4361ee";
+  ctx.lineWidth=1.5*SCALE;
+  ctx.beginPath();
+  ctx.moveTo(20*SCALE,y);
+  ctx.lineTo(W-20*SCALE,y);
+  ctx.stroke();
+  y+=8*SCALE;
+
+  ctx.fillStyle="#aaaaaa";
+  ctx.font=(8*SCALE)+"px "+fontStack;
+  ctx.textAlign="center";
+  ctx.fillText("Generated by Duty Tracker Pro | "+new Date().toLocaleString(), W/2, y);
+
+  // ── CANVAS → PDF ──
+  var imgData=canvas.toDataURL("image/jpeg",0.97);
+  var {jsPDF}=window.jspdf;
+  var doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  doc.addImage(imgData,"JPEG",0,0,210,297);
+  callback(doc);
+}
+
+// Helper: rounded rect path
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// Helper: section header label
+function sectionHeader(ctx,label,y,W,SCALE,fontStack){
+  ctx.fillStyle="#666677";
+  ctx.font="bold "+(9*SCALE)+"px "+fontStack;
+  ctx.textAlign="left";
+  ctx.fillText(label.toUpperCase(), 22*SCALE, y+12*SCALE);
+  return y+16*SCALE;
+}
+
+// Helper: draw a 1-row table with header + value rows
+function drawTable(ctx,cols,vals,headerColor,y,W,SCALE,fontStack){
+  var pad=20*SCALE;
+  var tableW=W-pad*2;
+  var colW=tableW/cols.length;
+  var rowH=22*SCALE;
+
+  // Header row
+  ctx.fillStyle=headerColor;
+  ctx.fillRect(pad,y,tableW,rowH);
+
+  ctx.fillStyle="#ffffff";
+  ctx.font="bold "+(8.5*SCALE)+"px "+fontStack;
+  ctx.textAlign="center";
+  for(var i=0;i<cols.length;i++){
+    ctx.fillText(cols[i], pad+colW*i+colW/2, y+rowH*0.65);
+  }
+  y+=rowH;
+
+  // Value row
+  ctx.fillStyle="#f0f2ff";
+  ctx.fillRect(pad,y,tableW,rowH);
+
+  ctx.fillStyle="#222233";
+  ctx.font="bold "+(10*SCALE)+"px "+fontStack;
+  ctx.textAlign="center";
+  for(var j=0;j<vals.length;j++){
+    ctx.fillText(vals[j], pad+colW*j+colW/2, y+rowH*0.68);
+  }
+
+  // Grid lines
+  ctx.strokeStyle="#ccccdd";
+  ctx.lineWidth=0.5*SCALE;
+  for(var k=1;k<cols.length;k++){
+    ctx.beginPath();
+    ctx.moveTo(pad+colW*k, y-rowH);
+    ctx.lineTo(pad+colW*k, y+rowH);
+    ctx.stroke();
+  }
+  ctx.strokeStyle="#aaaacc";
+  ctx.beginPath();
+  ctx.strokeRect(pad,y-rowH,tableW,rowH*2);
+  ctx.stroke();
+
+  return y+rowH;
+}
+
+// ── PDF ACTIONS ──
+function viewPDF(){
+  if(!window._r){ toast("⚠️ Generate report first"); return; }
+  toast("⏳ Preparing PDF...");
+  setTimeout(function(){
+    buildPDFAsync(function(doc){
+      if(!doc){ toast("❌ Error"); return; }
+      var blob=doc.output("blob");
+      var url=URL.createObjectURL(blob);
+      document.getElementById("pdf-frame").src=url;
+      document.getElementById("pdf-overlay").classList.add("on");
+    });
+  },50);
+}
+
+function closePDF(){
+  document.getElementById("pdf-overlay").classList.remove("on");
+  var frame=document.getElementById("pdf-frame");
+  URL.revokeObjectURL(frame.src);
+  frame.src="";
+}
+
+function dlPDF(){
+  if(!window._r){ toast("⚠️ Generate report first"); return; }
+  toast("⏳ Preparing PDF...");
+  setTimeout(function(){
+    buildPDFAsync(function(doc){
+      if(!doc){ toast("❌ Error"); return; }
+      doc.save("DutyReport_"+UNAME.replace(/\s/g,"_")+"_"+Date.now()+".pdf");
+      toast("✅ PDF Downloaded!");
+    });
+  },50);
+}
+
+function getWAText(){
+  var r=window._r; if(!r) return "";
+  return "📊 *Duty Tracker Pro — Report*\n"+
+    "👤 "+r.name+"\n"+
+    "📅 "+r.start+" → "+r.end+"\n\n"+
+    "*"+t("attendance")+"*\n"+
+    "✅ "+t("present")+": "+r.counts.Present+"\n"+
+    "🌗 "+t("halfDay")+": "+r.counts["Half Day"]+"\n"+
+    "🏠 "+t("leave")+": "+r.counts.Leave+"\n"+
+    "🤒 "+t("sick")+": "+r.counts.Sick+"\n"+
+    "🎉 "+t("holiday")+": "+r.counts.Holiday+"\n"+
+    "😴 "+t("off")+": "+r.counts.Off+"\n"+
+    "⏰ OT: "+r.totalOT+"h\n\n"+
+    "*"+t("earnings")+"*\n"+
+    "💰 "+t("baseSal")+": "+r.cur+Math.round(r.salEarn).toLocaleString()+"\n"+
+    "🍱 "+t("food")+": "+r.cur+Math.round(r.foodEarn).toLocaleString()+"\n"+
+    "⏰ "+t("otPay")+": "+r.cur+Math.round(r.otPay).toLocaleString()+"\n"+
+    "📉 "+t("pf")+": -"+r.cur+Math.round(r.pfAmt).toLocaleString()+"\n"+
+    "🏆 *"+t("net")+": "+r.cur+Math.round(r.net).toLocaleString()+"*\n\n"+
+    "📲 Duty Tracker Pro by Nitai Studio 🇮🇳";
+}
+
+function shareWA(){
+  if(!window._r){ toast("⚠️ Generate report first"); return; }
+  window.open("https://wa.me/?text="+encodeURIComponent(getWAText()),"_blank");
+}
+
+function shareFB(){
+  if(!window._r){ toast("⚠️ Generate report first"); return; }
+  window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent("https://duty-tracker-pro-329c4.firebaseapp.com")+"&quote="+encodeURIComponent(getWAText()),"_blank");
+}
+
+function toast(m){ var t=document.getElementById("toast"); t.innerText=m; t.className="on"; setTimeout(function(){ t.className=""; },3000); }
+function goTo(ref){ var a=document.getElementById("nav-"+ref); if(a) a.click(); }
+</script>
+</body>
+</html>
